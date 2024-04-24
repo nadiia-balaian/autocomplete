@@ -5,17 +5,18 @@ const StyledError = styled.p`
 `;
 
 interface ErrorComponentProps {
-  msg: string;
+  message: string;
 }
 
-export const ErrorComponent = ({ msg }: ErrorComponentProps) => {
+export const ErrorComponent = ({ message }: ErrorComponentProps) => {
   return (
     <StyledError
       style={{
         color: "red",
+        fontSize: "0.8rem",
       }}
     >
-      {msg}
+      {message}
     </StyledError>
   );
 };

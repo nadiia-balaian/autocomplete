@@ -3,14 +3,9 @@ import "./App.css";
 import styled from "styled-components";
 import { useDebounce } from "./hooks/useDebounce";
 import { getPlanets } from "./api";
-import { ErrorComponent } from "./components/ErrorComponent";
-import { AutoCompleteInput } from "./components/Autocomplete";
+import { AutoCompleteInput } from "./components/AutoCompleteInput";
 import { DropdownItem } from "./components/DropdownItem";
-
-const Wrapper = styled.div`
-  border: 1px solid #ccc;
-  padding: 20px;
-`;
+import { ErrorComponent } from "./components/ErrorComponent";
 
 const Suggestions = styled.ul`
   list-style: none;
@@ -19,9 +14,15 @@ const Suggestions = styled.ul`
   margin: 0;
   border: 1px solid #ccc;
   border-top: none;
+  max-height: 30vh;
+  overflow-y: auto;
 `;
 
-function App() {
+interface AppProps {
+  width?: string;
+}
+
+function App({ width }: AppProps) {
   const [value, setValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<string[]>([]);
@@ -33,7 +34,25 @@ function App() {
 
   const debouncedValue = useDebounce(value, 500);
 
-  const onKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActiveIndex((prevIndex) => (prevIndex + 1) % results.length);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActiveIndex(
+          (prevIndex) => (prevIndex - 1 + results.length) % results.length
+        );
+        break;
+      case "Enter":
+        onItemSelect(activeIndex);
+        break;
+    }
+  };
+
+  const handleEscape = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       // Clear the results to close the dropdown
       setResults([]);
@@ -42,14 +61,17 @@ function App() {
   };
 
   useEffect(() => {
-    const searchPlanets = async () => {
+    const search = async () => {
       try {
         const res = await getPlanets(debouncedValue);
         setResults(res.results.map((planet) => planet.name));
-        console.log(res);
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
-        setError("Something went wrong! Please try again.");
+        if (e?.response?.status === 404) {
+          setResults([]);
+        } else {
+          setError("Something went wrong! Please try again.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -59,11 +81,9 @@ function App() {
       setIsLoading(true);
       setResults([]);
       setError(null);
-      searchPlanets();
+      search();
     }
   }, [debouncedValue]);
-
-  console.log(value);
 
   // Focus the active item when the activeIndex changes for accessibility
   useEffect(() => {
@@ -87,20 +107,19 @@ function App() {
   };
 
   return (
-    <Wrapper
-      role="combobox"
-      aria-haspopup="listbox"
-      aria-owns="autocomplete-listbox"
+    <div
+      style={{
+        width: width || "100%",
+      }}
+      onKeyDown={results ? handleKeyDown : undefined}
     >
-      <h1>Autocomplete</h1>
-
       <AutoCompleteInput
         value={value}
         onInputChange={onInputChange}
-        onKeyDown={onKeyDown}
+        onKeyDown={handleEscape}
       />
       {debouncedValue !== "" && shouldSearch ? (
-        <Suggestions id="autocomplete-listbox" role="listbox">
+        <Suggestions id="autocomplete-listbox" role="listbox" ref={listboxRef}>
           {isLoading
             ? "Loading..."
             : results.length === 0
@@ -112,13 +131,14 @@ function App() {
                   isActive={index === activeIndex}
                   onSelect={() => onItemSelect(index)}
                   searchValue={debouncedValue}
+                  aria-selected={index === activeIndex}
+                  tabIndex={index === activeIndex ? 0 : -1}
                 />
               ))}
         </Suggestions>
       ) : null}
-
-      {error && <ErrorComponent msg={error} />}
-    </Wrapper>
+      {error ? <ErrorComponent message={error} /> : null}
+    </div>
   );
 }
 

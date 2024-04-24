@@ -28,5 +28,5 @@ async function fetchApi<Data>(
 export async function getPlanets(
   searchString: string
 ): Promise<ApiResponse<PlanetsResponse>> {
-  return fetchApi(`planets/?search=${searchString}`);
+  return fetchApi(`character/?name=${searchString}`);
 }

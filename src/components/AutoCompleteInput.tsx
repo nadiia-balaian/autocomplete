@@ -15,16 +15,14 @@ export const AutoCompleteInput = ({
   value,
   onInputChange,
   onKeyDown,
-}: AutoCompleteInputProps) => {
-  return (
-    <Input
-      type="text"
-      placeholder="Type something..."
-      value={value}
-      onChange={onInputChange}
-      onKeyDown={onKeyDown}
-      aria-autocomplete="list"
-      aria-controls="autocomplete-listbox"
-    />
-  );
-};
+}: AutoCompleteInputProps) => (
+  <Input
+    type="text"
+    placeholder="Type something..."
+    value={value}
+    onChange={onInputChange}
+    onKeyDown={onKeyDown}
+    aria-autocomplete="list"
+    aria-controls="autocomplete-listbox"
+  />
+);

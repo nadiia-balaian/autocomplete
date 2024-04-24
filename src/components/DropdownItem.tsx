@@ -4,13 +4,13 @@ const Item = styled.li`
   cursor: pointer;
   padding: 10px;
   transition: background 0.3s;
-  
+
   &:hover {
     background: #ddd;
   }
 `;
 
-interface DropdownItemProps {
+interface DropdownItemProps extends React.HTMLAttributes<HTMLLIElement>{
   text: string;
   isActive: boolean;
   onSelect: () => void;
@@ -21,11 +21,15 @@ export const DropdownItem = ({
   isActive,
   searchValue,
   onSelect,
+  ...props
 }: DropdownItemProps) => {
-  const matchIndex = text.toLowerCase().indexOf(searchValue.toLowerCase());
-  const beforeMatch = text.slice(0, matchIndex);
-  const match = text.slice(matchIndex, matchIndex + searchValue.length);
-  const afterMatch = text.slice(matchIndex + searchValue.length);
+  const highlightText = (str: string) => {
+    const regex = new RegExp(searchValue, "gi");
+    return str.replace(
+      regex,
+      (match) => `<span style="background: yellow">${match}</span>`
+    );
+  };
 
   return (
     <Item
@@ -34,10 +38,13 @@ export const DropdownItem = ({
       id={`option-${text}`}
       style={isActive ? { backgroundColor: "#bde4ff" } : {}}
       onClick={onSelect}
+      {...props}
     >
-      {beforeMatch}
-      <span style={{ backgroundColor: "yellow" }}>{match}</span>
-      {afterMatch}
+      <span
+        dangerouslySetInnerHTML={{
+          __html: highlightText(text),
+        }}
+      />
     </Item>
   );
 };
